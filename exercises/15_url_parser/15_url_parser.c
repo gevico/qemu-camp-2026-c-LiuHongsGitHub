@@ -11,9 +11,38 @@
 
 int parse_url(const char* url) {
     int err = 0;
+    int i =0;
+    while(url[i] != '\0'&& url[i] != '?' ){
+        i++;
+    }
+    if (url[i] == '\0') {
+        return -1;
+    }
+    i++; 
+    while (url[i] != '\0') {
+        char key[100] = {0};
+        char val[100] = {0};
+        int k = 0;
+        while (url[i]!= '=' &&url[i] != '\0')
+        {
+            key[k++] = url[i++];
+        }
+        key[k] = '\0';
+        i++;
+        int v = 0;
+        while (url[i] != '&' &&url[i] != '\0')
+        {
+            val[v++] = url[i++];
+        }
+        val[v] = '\0';
+        printf("%s=%s\n", key, val);
+        
+        if (url[i] == '&') {
+            i++;
+        }
 
-    // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+
+    }
 
 exit:
     return err;

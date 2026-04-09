@@ -53,7 +53,7 @@ Node topNode() {
     return stack[top];
 }
 
-int dx[4] = {1, 0, -1, 0};
+int dx[4] = {-1, 0, 1, 0};
 int dy[4] = {0, 1, 0, -1};
 
 void maze_dfs_stack(int startX, int startY, int endX, int endY) {
@@ -67,9 +67,9 @@ void maze_dfs_stack(int startX, int startY, int endX, int endY) {
 
         // Reach the end
         if (x == endX && y == endY) {
-            printf("找到路径，栈中即为路线（从起点到终点）：\n");
-            for (int i = 0; i <= top; i++) {
-                printf("(%d,%d)%s", stack[i].x, stack[i].y, i == top ? "\n" : "→");
+            
+            for (int i = top; i >= 0; i--) {
+                printf("(%d, %d)\n", stack[i].x, stack[i].y);
             }
             return;
         }

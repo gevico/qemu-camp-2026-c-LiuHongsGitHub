@@ -8,16 +8,16 @@ int parse_replace_command(const char* cmd, char** old_str, char** new_str) {
     if (cmd[0] != 's' || cmd[1] != '/') {
         return -1;
     }
-
-    // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    const char* first_slash = strchr(cmd, '/');
+    
+    
 
     return 0;
 }
 
 void replace_first_occurrence(char* str, const char* old, const char* new) {
     // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    
 }
 
 int main(int argc, char* argv[]) {

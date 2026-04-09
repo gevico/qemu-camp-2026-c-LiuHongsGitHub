@@ -19,8 +19,7 @@ int main() {
     
     for (int i = 0; i < 3; i++) 
     {
-	    // TODO: 在这里添加你的代码
-        // I AM NOT DONE
+        fscanf(file, "%s %s %d", students[i]->id,students[i]->name, &students[i]->age);
     }
     fclose(file);
     

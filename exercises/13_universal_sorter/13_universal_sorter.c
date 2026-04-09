@@ -41,7 +41,45 @@ void processFile(const char *filename) {
 
     switch (choice) {
         // TODO: 在这里添加你的代码
-        // I AM NOT DONE
+        case 1: {
+            int arr[n];
+            for (int i = 0; i < n; i++) {
+                if (fscanf(fin, "%d", &arr[i]) != 1) {
+                    printf("错误: 文件 %s 格式不正确\n", filename);
+                    fclose(fin);
+                    return;
+                }   
+            }        
+            sort(arr, n, sizeof(int), compareInt);
+            printf("排序结果: ");
+            for (int i = 0; i < n; i++) {
+                printf("%d ", arr[i]);
+            }
+            printf("\n");
+            break;
+        }
+        case 2: {
+            float arr[n];
+            for (int i = 0; i < n; i++) {
+                if (fscanf(fin, "%f", &arr[i]) != 1) {
+                    printf("错误: 文件 %s 格式不正确\n", filename);
+                    fclose(fin);
+                    return;
+                }   
+            }        
+            sort(arr, n, sizeof(float), compareFloat);
+            printf("排序结果: ");
+            for (int i = 0; i < n; i++) {
+                printf("%.2f ", arr[i]);
+            }
+            printf("\n");
+            break;
+        }
+        case 3: {
+            char *arr[n];
+            for (int i = 0; i < n; i++) {
+                char str[100];
+                if (fscanf(fin, "%s", str) != 1) {
     }
 
     fclose(fin);

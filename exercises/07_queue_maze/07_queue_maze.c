@@ -67,13 +67,11 @@ void printPath(int endX, int endY) {
 		y = py;
 	}
 
-	// 倒序输出 = 起点到终点
-	printf("BFS 最短路径：\n");
-	for (int i = len - 1; i >= 0; i--) {
-		printf("(%d,%d)", path[i].x, path[i].y);
-		if (i > 0) printf("→");
+	
+	for (int i =0; i < len; i++) {
+		printf("(%d, %d)\n", path[i].x, path[i].y);
 	}
-	printf("\n");
+
 }
 
 // BFS 主函数
@@ -118,6 +116,6 @@ void bfs(int startX, int startY, int endX, int endY) {
 }
 
 int main(void) {
-	bfs(0, 0, 4, 4); // 起点(0,0) 终点(4,4)
+	bfs(0, 0, MAX_ROW-1, MAX_COL-1); // 起点(0,0) 终点(4,4)
 	return 0;
 }
