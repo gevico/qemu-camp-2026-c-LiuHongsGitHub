@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
     read(fd,&ehdr,sizeof(ehdr));
-    if 
+     
     print_elf_type(ehdr.e_type);
     close(fd);
   }
