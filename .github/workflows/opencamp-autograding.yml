@@ -44,7 +44,7 @@ jobs:
       - name: Install jq
         run: |
           sudo apt-get update
-          sudo apt-get install -y jq
+          sudo apt-get install -y jq libelf-dev
 
       - name: Show toolchain versions
         run: |
