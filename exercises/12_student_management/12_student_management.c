@@ -19,6 +19,7 @@ int main() {
     
     for (int i = 0; i < 3; i++) 
     {
+        students[i] = (Student *)malloc(sizeof(Student));
         fscanf(file, "%s %s %d", students[i]->id,students[i]->name, &students[i]->age);
     }
     fclose(file);
@@ -34,6 +35,7 @@ int main() {
     for (int i = 0; i < 3; i++) 
     {
         free(students[i]);
+        students[i] = NULL;
     }
     
     return 0;

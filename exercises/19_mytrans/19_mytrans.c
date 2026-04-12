@@ -8,6 +8,11 @@
 void to_lowercase(char *str) {
   for (; *str; ++str)
     *str = tolower((unsigned char)*str);
+  int len = strlen(str);
+    while (len > 0 && ispunct((unsigned char)str[len - 1])) {
+        str[len - 1] = '\0';
+        len--;
+    }
 }
 
 int main() {
@@ -41,11 +46,20 @@ int main() {
         continue;
     }
 
-    // 使用 strtok 按空格分割单词
-    // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    char *token = strtok(line, " ");
+    while (token != NULL) {
+      to_lowercase(token);
+      char *translation = hash_table_lookup(table, token);
+      if (translation) {
+        printf("原文: %s\t翻译: %s\n", token, translation);
+    } else {
+        printf("原文: %s\t未找到该单词的翻译。\n", token);
+    }
+      token = strtok(NULL, " ");
+    }  
   }
 
   free_hash_table(table);
+  fclose(file);
   return 0;
 }

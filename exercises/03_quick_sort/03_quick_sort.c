@@ -12,16 +12,6 @@ typedef struct {
 
 Student students[MAX_STUDENTS];
 
-void quick_sort(int left, int right) {
-    if (left >= right) {
-        return;
-    }
-    
-    int pivot = partition(left, right);
-    quick_sort(left, pivot - 1);
-    quick_sort(pivot + 1, right);
-}
-
 int partition(int left, int right) {
     Student pivot = students[left];
     int i = left ;
@@ -42,6 +32,17 @@ int partition(int left, int right) {
 
     return i;
 }
+
+void quick_sort(int left, int right) {
+    if (left >= right) {
+        return;
+    }
+    
+    int pivot = partition(left, right);
+    quick_sort(left, pivot - 1);
+    quick_sort(pivot + 1, right);
+}
+
         
     
  

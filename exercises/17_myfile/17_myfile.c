@@ -45,8 +45,10 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
     read(fd,&ehdr,sizeof(ehdr));
-     
-    print_elf_type(ehdr.e_type);
+    if (memcmp(ehdr.e_ident, ELFMAG, SELFMAG)==0){
+      print_elf_type(ehdr.e_type);
+    }
+    
     close(fd);
   }
   return 0;

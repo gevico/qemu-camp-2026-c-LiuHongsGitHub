@@ -1,10 +1,10 @@
 #include "mywc.h"
 #include <stdio.h>
 
-// I AM NOT DONE
-int main(int argc, char *argv[]) {
-  const char* filepath = "./text.txt";
 
-  process_file(filepath);
+int main(int argc, char *argv[]) {
+
+
+  process_file("text.txt");
   return 0;
 }

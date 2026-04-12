@@ -35,7 +35,7 @@ int parse_url(const char* url) {
             val[v++] = url[i++];
         }
         val[v] = '\0';
-        printf("%s=%s\n", key, val);
+        printf("key = %s, value = %s\n", key, val);
         
         if (url[i] == '&') {
             i++;

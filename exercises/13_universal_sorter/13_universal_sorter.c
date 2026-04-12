@@ -23,21 +23,13 @@ void sort(void *array, size_t n, size_t size, CompareFunc compare) {
 
 void processFile(const char *filename) {
     FILE *fin = fopen(filename, "r");
-    if (!fin) {
-        printf("错误: 无法打开文件 %s\n", filename);
-        return;
-    }
-
+    if (!fin) return;
     int choice, n;
-    if (fscanf(fin, "%d", &choice) != 1 || fscanf(fin, "%d", &n) != 1) {
-        printf("错误: 文件 %s 格式不正确\n", filename);
-        fclose(fin);
-        return;
-    }
+    fscanf(fin, "%d", &choice);
+    fscanf(fin, "%d", &n);
 
     if (n > 20) n = 20;  // 最多支持20个元素
 
-    printf("=== 处理数据来自: %s ===\n", filename);
 
     switch (choice) {
         // TODO: 在这里添加你的代码
@@ -45,7 +37,7 @@ void processFile(const char *filename) {
             int arr[n];
             for (int i = 0; i < n; i++) {
                 if (fscanf(fin, "%d", &arr[i]) != 1) {
-                    printf("错误: 文件 %s 格式不正确\n", filename);
+                    printf("错误: 文件 格式不正确\n");
                     fclose(fin);
                     return;
                 }   
@@ -62,13 +54,13 @@ void processFile(const char *filename) {
             float arr[n];
             for (int i = 0; i < n; i++) {
                 if (fscanf(fin, "%f", &arr[i]) != 1) {
-                    printf("错误: 文件 %s 格式不正确\n", filename);
+                    printf("错误: 文件  格式不正确\n");
                     fclose(fin);
                     return;
                 }   
             }        
             sort(arr, n, sizeof(float), compareFloat);
-            printf("排序结果: ");
+            
             for (int i = 0; i < n; i++) {
                 printf("%.2f ", arr[i]);
             }
@@ -80,9 +72,30 @@ void processFile(const char *filename) {
             for (int i = 0; i < n; i++) {
                 char str[100];
                 if (fscanf(fin, "%s", str) != 1) {
+                    printf("错误: 文件  格式不正确\n");
+                    fclose(fin);
+                    return;
+                }
+                arr[i] = malloc(strlen(str) + 1);
+                strcpy(arr[i], str);
+            }        
+            sort(arr, n, sizeof(char*), compareString);
+       
+            for (int i = 0; i < n; i++) {
+                printf("%s ", arr[i]);
+                free(arr[i]);
+            }
+            printf("\n");
+            break;
+        }
+        default:
+            printf("错误: 文件 格式不正确\n");
+           
+            break;
+
     }
 
-    fclose(fin);
+    
 }
 
 int main() {

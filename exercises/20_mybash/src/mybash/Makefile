@@ -20,9 +20,13 @@ OBJS := $(patsubst %.o,$(OBJDIR)/%.o,$(OBJS))
 TARGET_PATH := $(BINDIR)/$(TARGET)
 
 all: $(TARGET_PATH)
+$(OBJDIR)/%.o: %.c
+	@mkdir -p $(OBJDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# TODO: 在这里添加你的代码
-# I AM NOT DONE
+$(TARGET_PATH): $(OBJS)
+	@mkdir -p $(BINDIR)
+	$(CC) $(OBJS) -o $@ $(LINKLIBS)
 
 clean:
 	@rm -rf $(OBJDIR)/*.o $(TARGET_PATH)

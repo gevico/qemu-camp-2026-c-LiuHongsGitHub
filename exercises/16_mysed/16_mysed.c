@@ -9,7 +9,16 @@ int parse_replace_command(const char* cmd, char** old_str, char** new_str) {
         return -1;
     }
     const char* first_slash = strchr(cmd, '/');
-    
+    const char* second_slash = strchr(first_slash + 1, '/');
+    if (second_slash == NULL) {
+        return -1;
+    }
+    *old_str = strndup(first_slash + 1, second_slash - first_slash - 1);
+    const char* third_slash = strchr(second_slash + 1, '/');
+    if (third_slash == NULL) {
+        return -1;
+    }
+    *new_str = strndup(second_slash + 1, third_slash - second_slash - 1);   
     
 
     return 0;
@@ -17,7 +26,15 @@ int parse_replace_command(const char* cmd, char** old_str, char** new_str) {
 
 void replace_first_occurrence(char* str, const char* old, const char* new) {
     // TODO: 在这里添加你的代码
-    
+    char* pos = strstr(str, old);
+    if (pos!= NULL) {
+        int old_len = strlen(old);
+        int new_len = strlen(new);
+        int suffix_len = strlen(pos+old_len);
+        memmove(pos + new_len, pos + old_len, suffix_len + 1);
+        memcpy(pos, new, new_len);
+    }
+
 }
 
 int main(int argc, char* argv[]) {

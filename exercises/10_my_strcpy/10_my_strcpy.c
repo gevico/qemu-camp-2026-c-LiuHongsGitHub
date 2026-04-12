@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int main() {
     char source[] = "Hello, World! This is a test string for my_strcpy function.\n";

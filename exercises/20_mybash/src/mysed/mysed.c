@@ -13,8 +13,16 @@ int parse_replace_command(const char* cmd, char** old_str, char** new_str) {
     *old_str = NULL;
     *new_str = NULL;
     
-    // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    if (cmd[0] != 's' || cmd[1] != '/' || cmd[strlen(cmd) - 1] != '/'){
+        return -1;
+    }
+    const char* first_slash = strchr(cmd + 2, '/');
+    const char* second_slash = strchr(first_slash + 1, '/');
+    if (!first_slash || !second_slash || second_slash == first_slash + 1) {
+        return -1;
+    }
+    *old_str = strndup(first_slash, second_slash - first_slash);    
+    *new_str = strdup(second_slash + 1);
 
     return 0;
 }
@@ -25,8 +33,29 @@ void replace_first_occurrence(char* str, const char* old, const char* new) {
         return;
     }
     
-    // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    // 找到第一个 old 出现的位置
+    char* pos = strstr(str, old);
+    if (!pos) {
+        return;
+    }
+    size_t old_len = strlen(old);
+    size_t new_len = strlen(new);
+    size_t str_len = strlen(str);
+
+    if (new_len > old_len) {
+        char new_str_buffer[1024];
+        char* new_pos = new_str_buffer + (pos - str);
+        *new_pos = '\0';
+        strncat(new_str_buffer, str, pos - str);
+        strcat(new_str_buffer, new);
+        strcat(new_str_buffer, pos + old_len);
+        strncpy(str, new_str_buffer, str_len);
+        str[str_len] = '\0';  // 确保终止
+    } else {
+        // 替换 old_str 为 new_str
+        memmove(pos + new_len, pos + old_len, str_len - (pos - str) - old_len + 1);
+        memcpy(pos, new, new_len);
+    }
 }
 
 int __cmd_mysed(const char* rules, const char* str) {
