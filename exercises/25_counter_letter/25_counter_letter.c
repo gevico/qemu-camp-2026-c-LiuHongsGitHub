@@ -23,13 +23,40 @@ TreeNode* create_node(char letter) {
 // 向BST中插入节点或更新计数
 TreeNode* insert_or_update(TreeNode* root, char letter) {
     // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    //遍历树，找到插入的位置
+    if (root == NULL) {
+        return create_node(letter);
+    }
+
+    while (root!= NULL) {
+        if (root->letter == tolower(letter)) {
+            root->count++;
+            return root;    
+        }
+        else if (root->letter > tolower(letter)) {
+            root->left = insert_or_update(root->left, letter);
+            return root;
+        }
+        else {
+            root->right = insert_or_update(root->right, letter);
+            return root;
+        }           
+    }
+    return NULL;
 }
 
 // 中序遍历BST并打印结果（按字母顺序）
 void inorder_traversal(TreeNode* root) {
     // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    if (root == NULL) {
+        return;
+    }
+
+    
+    inorder_traversal(root->left);
+
+    inorder_traversal(root->right);
+    
     printf("%c:%d\n", root->letter, root->count);
 }
 
