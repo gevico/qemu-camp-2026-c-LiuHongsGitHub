@@ -105,25 +105,51 @@ void preorder_traversal(TreeNode *root) {
 }
 
 void preorder_traversal_iterative(TreeNode *root) {
-    // TODO: 在这里添加你的代码
     if (root == NULL) {
         return;
     }
-    Queue *q = create_queue();
-    enqueue(q, root);
-    while (!is_empty(q)) {
-        TreeNode *current = dequeue(q);
-        printf("%d ", current->val);
-        
-        if (current->left) {
-            enqueue(q, current->left);
+
+    int stack_capacity = 64;
+    int top = -1;
+    TreeNode **stack = (TreeNode**)malloc((size_t)stack_capacity * sizeof(TreeNode*));
+    if (stack == NULL) {
+        return;
+    }
+
+    stack[++top] = root;
+
+    while (top >= 0) {
+        TreeNode *node = stack[top--];
+        printf("%d ", node->val);
+
+        if (node->right != NULL) {
+            if (top + 1 >= stack_capacity) {
+                stack_capacity *= 2;
+                TreeNode **new_stack = (TreeNode**)realloc(stack, (size_t)stack_capacity * sizeof(TreeNode*));
+                if (new_stack == NULL) {
+                    free(stack);
+                    return;
+                }
+                stack = new_stack;
+            }
+            stack[++top] = node->right;
         }
-        if (current->right) {
-            enqueue(q, current->right);
+
+        if (node->left != NULL) {
+            if (top + 1 >= stack_capacity) {
+                stack_capacity *= 2;
+                TreeNode **new_stack = (TreeNode**)realloc(stack, (size_t)stack_capacity * sizeof(TreeNode*));
+                if (new_stack == NULL) {
+                    free(stack);
+                    return;
+                }
+                stack = new_stack;
+            }
+            stack[++top] = node->left;
         }
     }
-    free(q);
 
+    free(stack);
 }
 
 void free_tree(TreeNode *root) {
