@@ -8,26 +8,22 @@
 
 PWD := $(shell pwd)
 
-# 所有子模块目录（静态库：生成 .a）
-SUBDIRS := \
-	mysed \
-	myfile \
-	mywc \
-	mytrans
+SUBDIRS := mysed myfile mywc mytrans
 
-# 默认目标：构建 mybash（依赖其他库）
 all: mybash
 
-# 通用规则：构建每个子模块（静态库）
 $(SUBDIRS):
-    $(MAKE) -C $@ OBJDIR=obj/$@ BINDIR=bin
+	$(MAKE) -s -C src/$@ OBJDIR=$(PWD)/obj/$@
 
-# 构建 mybash（可执行文件，依赖上面的库）
 mybash: $(SUBDIRS)
-	gcc -o bin/mybash exercises/20_mybash/mybash.c -Lobj/mysed -Lobj/myfile -Lobj/mywc -Lobj/mytrans -lmysed -lmyfile -lmywc -lmytrans
+	$(MAKE) -s -C src/mybash BINDIR=$(PWD)/bin OBJDIR=$(PWD)/obj/mybash LINKLIBS="-L$(PWD)/obj/mysed -L$(PWD)/obj/myfile -L$(PWD)/obj/mywc -L$(PWD)/obj/mytrans"
 
-# 清理所有生成的文件
 clean:
-    rm -rf bin/* obj/* out/*
+	$(MAKE) -s -C src/mybash clean BINDIR=$(PWD)/bin OBJDIR=$(PWD)/obj/mybash
+	$(MAKE) -s -C src/mysed clean OBJDIR=$(PWD)/obj/mysed
+	$(MAKE) -s -C src/myfile clean OBJDIR=$(PWD)/obj/myfile
+	$(MAKE) -s -C src/mywc clean OBJDIR=$(PWD)/obj/mywc
+	$(MAKE) -s -C src/mytrans clean OBJDIR=$(PWD)/obj/mytrans
+	$(RM) -r $(PWD)/obj $(PWD)/bin
 
 .PHONY: all $(SUBDIRS) mybash clean

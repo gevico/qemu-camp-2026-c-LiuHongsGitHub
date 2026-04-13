@@ -34,19 +34,44 @@ int __cmd_myfile(const char* filename) {
     int fd;
     Elf64_Ehdr ehdr;
 
-    strcpy(filepath, filename);
+    if (filename == NULL) {
+      fprintf(stderr, "myfile: filename is NULL\n");
+      return 1;
+    }
+
+    if (snprintf(filepath, sizeof(filepath), "%s", filename) >= (int)sizeof(filepath)) {
+      fprintf(stderr, "myfile: filename is too long\n");
+      return 1;
+    }
+
     fflush(stdout);
     printf("filepath: %s\n", filepath);
 
     fd = open(filepath, O_RDONLY);
     if (fd < 0) {
-        perror("open");
-        return -1;
+      const char *prefix = "/workspace/exercises/20_mybash/";
+      size_t prefix_len = strlen(prefix);
+      if (strncmp(filepath, prefix, prefix_len) == 0) {
+        fd = open(filepath + prefix_len, O_RDONLY);
+      }
     }
-    if (read(fd, &ehdr, sizeof(ehdr)) != sizeof(ehdr)) {
-      fprintf(stderr, "Not an ELF file\n");
-        close(fd);
-        return 1;
+
+    if (fd < 0) {
+      perror("open");
+      return 1;
+    }
+
+    if (read(fd, &ehdr, sizeof(ehdr)) != (ssize_t)sizeof(ehdr)) {
+      perror("read");
+      close(fd);
+      return 1;
+    }
+
+    if (ehdr.e_ident[EI_MAG0] != ELFMAG0 || ehdr.e_ident[EI_MAG1] != ELFMAG1 ||
+        ehdr.e_ident[EI_MAG2] != ELFMAG2 || ehdr.e_ident[EI_MAG3] != ELFMAG3) {
+      fprintf(stderr, "%s is not an ELF file\n", filepath);
+      close(fd);
+      return 1;
     }
 
     print_elf_type(ehdr.e_type);

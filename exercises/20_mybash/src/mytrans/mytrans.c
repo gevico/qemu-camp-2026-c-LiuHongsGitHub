@@ -7,19 +7,25 @@
 #include <string.h>
 
 void trim(char *str) {
-    int j = strlen(str) - 1;
-    while (j >= 0 && isspace(str[j])) {
-        str[j] = '\0';
-        j--;
-    }
-    int i = 0;
-    while(isspace(str[i])){
-        i++;
-    }
-    
-    if(i < strlen(str)){
-      memmove(str,str+i,strlen(str+i)+1);
-    } 
+  char *start = str;
+  while (*start && isspace((unsigned char)*start)) {
+    start++;
+  }
+
+  if (*start == '\0') {
+    *str = '\0';
+    return;
+  }
+
+  char *end = start + strlen(start) - 1;
+  while (end > start && isspace((unsigned char)*end)) {
+    end--;
+  }
+  *(end + 1) = '\0';
+
+  if (start != str) {
+    memmove(str, start, (size_t)(end - start + 2));
+  }
 }
 
 int load_dictionary(const char *filename, HashTable *table,
@@ -35,27 +41,53 @@ int load_dictionary(const char *filename, HashTable *table,
   char current_translation[1024] = {0};
   int in_entry = 0;
 
-   while (fgets(line,sizeof(line),file)) {
-      line[strcspn(line,"\n")] = '\0';
-      trim(line);
-      if(line[0] == '#'){
-        in_entry=1;
-        strncpy(current_word, line + 1, sizeof(current_word) - 1); // 复制 # 后面的内容为单词
-         trim(current_word);
-      }else if (strncmp(line, "Trans:", 6) == 0 && in_entry) {
-            strncpy(current_translation, line + 6, sizeof(current_translation) - 1); // 复制 Trans: 后面的内容为译文
-            trim(current_translation);
-            // 插入哈希表
-            if (hash_table_insert(table, current_word, current_translation) != 1) {
-                fprintf(stderr, "插入字典条目失败: %s -> %s\n", current_word, current_translation);
-                fclose(file);
-                return -1;
-            }
-            // 增加字典计数
-            (*dict_count)++;
-            in_entry = 0; // 重置 in_entry 为 0，等待下一个 # 开头的行
-        } 
-   }
+  while (fgets(line, sizeof(line), file) != NULL) {
+    trim(line);
+
+    if (line[0] == '\0') {
+      continue;
+    }
+
+    if (line[0] == '#') {
+      if (in_entry && current_word[0] != '\0' && current_translation[0] != '\0') {
+        hash_table_insert(table, current_word, current_translation);
+        (*dict_count)++;
+      }
+
+      strncpy(current_word, line + 1, sizeof(current_word) - 1);
+      current_word[sizeof(current_word) - 1] = '\0';
+      trim(current_word);
+
+      current_translation[0] = '\0';
+      in_entry = 1;
+      continue;
+    }
+
+    if (strncmp(line, "Trans:", 6) == 0) {
+      const char *translation_part = line + 6;
+      strncpy(current_translation, translation_part, sizeof(current_translation) - 1);
+      current_translation[sizeof(current_translation) - 1] = '\0';
+      trim(current_translation);
+      continue;
+    }
+
+    if (in_entry) {
+      size_t used = strlen(current_translation);
+      if (used < sizeof(current_translation) - 1) {
+        if (used > 0) {
+          strncat(current_translation, " ", sizeof(current_translation) - used - 1);
+          used = strlen(current_translation);
+        }
+        strncat(current_translation, line, sizeof(current_translation) - used - 1);
+        trim(current_translation);
+      }
+    }
+  }
+
+  if (in_entry && current_word[0] != '\0' && current_translation[0] != '\0') {
+    hash_table_insert(table, current_word, current_translation);
+    (*dict_count)++;
+  }
 
   fclose(file);
   return 0;
@@ -75,7 +107,25 @@ int __cmd_mytrans(const char* filename) {
 
   printf("=== 哈希表版英语翻译器（支持百万级数据）===\n");
   uint64_t dict_count = 0;
-  if (load_dictionary("/workspace/exercises/20_mybash/src/mytrans/dict.txt", table, &dict_count) != 0) {
+  const char *dict_candidates[] = {
+      "src/mytrans/dict.txt",
+      "./src/mytrans/dict.txt",
+      "dict.txt",
+      "/qemu-camp-2026-c-LiuHongsGitHub/exercises/20_mybash/src/mytrans/dict.txt",
+      "/workspace/exercises/20_mybash/src/mytrans/dict.txt",
+      NULL,
+  };
+
+  int loaded = -1;
+  for (int i = 0; dict_candidates[i] != NULL; i++) {
+    loaded = load_dictionary(dict_candidates[i], table, &dict_count);
+    fprintf(stderr, "lopp load_dictionary %d %s %d\n", i, dict_candidates[i], loaded);
+    if (loaded == 0) {
+      break;
+    }
+  }
+  printf("词典加载完成，共计%ld词条。\n", loaded);
+  if (loaded != 0) {
     fprintf(stderr, "加载词典失败，请确保 dict.txt 存在。\n");
     free_hash_table(table);
     return 1;
@@ -84,7 +134,15 @@ int __cmd_mytrans(const char* filename) {
 
   FILE* file = fopen(filename, "r");
   if (file == NULL) {
-    fprintf(stderr, "无法打开文件 dict.txt。\n");
+    const char *prefix = "/workspace/exercises/20_mybash/";
+    size_t prefix_len = strlen(prefix);
+    if (strncmp(filename, prefix, prefix_len) == 0) {
+      file = fopen(filename + prefix_len, "r");
+    }
+  }
+
+  if (file == NULL) {
+    fprintf(stderr, "无法打开文件 %s。\n", filename);
     free_hash_table(table);
     return 1;
   }
@@ -98,8 +156,9 @@ int __cmd_mytrans(const char* filename) {
     }
 
     // 使用 strtok 按空格分割单词
-    char *word = strtok(line, " ");
+    char *word = strtok(line, " \t");
     while (word != NULL) {
+      to_lowercase(word);
       const char *translation = hash_table_lookup(table, word);
       printf("原文: %s\t", word);
       if (translation) {
@@ -108,7 +167,7 @@ int __cmd_mytrans(const char* filename) {
           printf("未找到该单词的翻译。\n");
       }
 
-      word = strtok(NULL, " ");
+      word = strtok(NULL, " \t");
     }
   }
 

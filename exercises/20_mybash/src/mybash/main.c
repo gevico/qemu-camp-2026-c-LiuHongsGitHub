@@ -58,10 +58,12 @@ int is_builtin_command(char **args) {
   if (args[0] == NULL)
     return 0;
 
-  if (strcmp(args[0],"cd") == 0){
+  if (strcmp(args[0], "cd") == 0) {
     execute_cd(args);
     return 1;
-  } else if (strcmp(args[0],"exit") == 0){
+  }
+
+  if (strcmp(args[0], "exit") == 0) {
     execute_exit();
     return 1;
   }
@@ -69,11 +71,17 @@ int is_builtin_command(char **args) {
   return 0;
 }
 
+void free_args(char **args, int argc) {
+  for (int i = 0; i < argc; i++) {
+    free(args[i]);
+    args[i] = NULL;
+  }
+}
+
 int parse_input(char *input, char **args) {
   int i = 0;
   int in_quotes = 0;
   char *buf = input;
-  char *arg_start = NULL;
   char arg_buf[MAX_INPUT];  // 临时存储当前正在解析的参数
   int arg_buf_idx = 0;
 
@@ -81,28 +89,59 @@ int parse_input(char *input, char **args) {
 
   while (*buf != '\0' && i < MAX_ARGS - 1) {
       char c = *buf;
-      if (c == '"'){
-        in_quotes =!in_quotes;
-      } else if(c ==' ' &&!in_quotes) {
-        if(arg_buf_idx > 0) {
-          arg_buf[arg_buf_idx] = '\0';
-          args[i++] = strdup(arg_buf);
-          arg_buf_idx = 0;
-        }
+
+      if (c == '"') {
+          in_quotes = !in_quotes;
+      } else if ((c == ' ' || c == '\t') && !in_quotes) {
+          if (arg_buf_idx > 0) {
+              char *arg_copy;
+              arg_buf[arg_buf_idx] = '\0';
+              arg_copy = strdup(arg_buf);
+              if (arg_copy == NULL) {
+                  fprintf(stderr, "mybash: memory allocation failed\n");
+                  free_args(args, i);
+                  return 0;
+              }
+              args[i++] = arg_copy;
+              arg_buf_idx = 0;
+          }
       } else {
-        arg_buf[arg_buf_idx++] = c;
+          if (arg_buf_idx < MAX_INPUT - 1) {
+              arg_buf[arg_buf_idx++] = c;
+          }
       }
+
       buf++;
   }
 
   // 处理最后一个参数（循环结束后可能还有未加入的）
   if (arg_buf_idx > 0) {
+      char *arg_copy;
       arg_buf[arg_buf_idx] = '\0';
-      args[i++] = strdup(arg_buf);
+      arg_copy = strdup(arg_buf);
+      if (arg_copy == NULL) {
+          fprintf(stderr, "mybash: memory allocation failed\n");
+          free_args(args, i);
+          return 0;
+      }
+      args[i++] = arg_copy;
   }
 
   args[i] = NULL;  // exec-style NULL结尾
   return i;
+}
+
+void normalize_workspace_path(char *arg) {
+  const char *prefix = "/workspace/exercises/20_mybash/";
+  size_t prefix_len = strlen(prefix);
+
+  if (arg == NULL) {
+    return;
+  }
+
+  if (strncmp(arg, prefix, prefix_len) == 0) {
+    memmove(arg, arg + prefix_len, strlen(arg + prefix_len) + 1);
+  }
 }
 
 // ======================
@@ -134,8 +173,13 @@ int main(int argc, char *argv[]) {
         continue;  // 空行
       }
 
+      for (int idx = 1; idx < argc_parsed; idx++) {
+        normalize_workspace_path(args[idx]);
+      }
+
       // 处理内置命令
       if (is_builtin_command(args)) {
+        free_args(args, argc_parsed);
         continue;
       }
 
@@ -145,8 +189,8 @@ int main(int argc, char *argv[]) {
       const char *cmd_arg2 = (argc_parsed >= 3) ? args[2] : NULL;
 
       printf("cmd_name: %s\n", cmd_name);
-      printf("cmd_arg1: %s\n", cmd_arg1);
-      printf("cmd_arg2: %s\n", cmd_arg2);
+      printf("cmd_arg1: %s\n", cmd_arg1 != NULL ? cmd_arg1 : "(null)");
+      printf("cmd_arg2: %s\n", cmd_arg2 != NULL ? cmd_arg2 : "(null)");
 
       int found = 0;
       for (Command *cmd = commands; cmd->name != NULL; cmd++) {
@@ -155,9 +199,17 @@ int main(int argc, char *argv[]) {
           if (cmd->is_arg_required == 0) {
             cmd->func.func_0();
           } else if (cmd->is_arg_required == 1) {
-            cmd->func.func_1(cmd_arg1);
+            if (cmd_arg1 == NULL) {
+              fprintf(stderr, "mybash: missing argument for command: %s\n", cmd_name);
+            } else {
+              cmd->func.func_1(cmd_arg1);
+            }
           } else if (cmd->is_arg_required == 2) {
-            cmd->func.func_2(cmd_arg1, cmd_arg2);
+            if (cmd_arg1 == NULL || cmd_arg2 == NULL) {
+              fprintf(stderr, "mybash: missing argument for command: %s\n", cmd_name);
+            } else {
+              cmd->func.func_2(cmd_arg1, cmd_arg2);
+            }
           }
           break;
         }
@@ -166,6 +218,8 @@ int main(int argc, char *argv[]) {
       if (!found) {
         fprintf(stderr, "mybash: command not found: %s\n", cmd_name);
       }
+
+      free_args(args, argc_parsed);
     }
 
     fclose(file);
@@ -184,18 +238,24 @@ int main(int argc, char *argv[]) {
 
       input[strcspn(input, "\n")] = '\0';
 
-      int argc = parse_input(input, args);
+      int argc_parsed = parse_input(input, args);
 
-      if (argc == 0) {
+      if (argc_parsed == 0) {
         continue;
       }
 
+      for (int idx = 1; idx < argc_parsed; idx++) {
+        normalize_workspace_path(args[idx]);
+      }
+
       if (is_builtin_command(args)) {
+        free_args(args, argc_parsed);
         continue;
       }
 
       const char *cmd_name = args[0];
-      const char *cmd_arg = (argc >= 2) ? args[1] : NULL;
+      const char *cmd_arg1 = (argc_parsed >= 2) ? args[1] : NULL;
+      const char *cmd_arg2 = (argc_parsed >= 3) ? args[2] : NULL;
 
       int found = 0;
       for (Command *cmd = commands; cmd->name != NULL; cmd++) {
@@ -204,9 +264,17 @@ int main(int argc, char *argv[]) {
           if (cmd->is_arg_required == 0) {
             cmd->func.func_0();
           } else if (cmd->is_arg_required == 1) {
-            cmd->func.func_1(cmd_arg);
+            if (cmd_arg1 == NULL) {
+              fprintf(stderr, "mybash: missing argument for command: %s\n", cmd_name);
+            } else {
+              cmd->func.func_1(cmd_arg1);
+            }
           } else if (cmd->is_arg_required == 2) {
-            cmd->func.func_2(cmd_arg, cmd_arg);
+            if (cmd_arg1 == NULL || cmd_arg2 == NULL) {
+              fprintf(stderr, "mybash: missing argument for command: %s\n", cmd_name);
+            } else {
+              cmd->func.func_2(cmd_arg1, cmd_arg2);
+            }
           }
           break;
         }
@@ -215,6 +283,8 @@ int main(int argc, char *argv[]) {
       if (!found) {
         fprintf(stderr, "mybash: command not found: %s\n", cmd_name);
       }
+
+      free_args(args, argc_parsed);
     }
   }
 

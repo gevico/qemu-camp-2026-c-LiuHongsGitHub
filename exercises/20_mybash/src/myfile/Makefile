@@ -14,16 +14,17 @@ LIB_PATH := $(OBJDIR)/$(LIB)
 
 # 源文件
 SRCS := myfile.c
-OBJS := $(SRCS:.c=.o)
-OBJS := $(patsubst %.o,$(OBJDIR)/%.o,$(OBJS))
+OBJS := $(patsubst %.c,$(OBJDIR)/%.o,$(SRCS))
 
 all: $(LIB_PATH)
 
-$(OBJDIR)/%.o: %.c
-	@mkdir -p $(OBJDIR)
+$(OBJDIR): 
+	mkdir -p $(OBJDIR)
+$(OBJDIR)/%.o: %.c | $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
+	
 $(LIB_PATH): $(OBJS)
-	@mkdir -p $(OBJDIR)
-	ar rcs $@ $^
+	ar rcs $@ $(OBJS)
+
 clean:
-	@rm -rf $(OBJDIR)/*.o $(LIB_PATH)
+	$(RM) -r $(OBJDIR)
