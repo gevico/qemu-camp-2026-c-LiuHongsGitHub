@@ -22,8 +22,8 @@ typedef struct {
 unsigned long djb2_hash(const char *str) {
     unsigned long hash = 5381;
     int c;
-    while ((c = *str++))
-        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+    while ((c = (unsigned char)*str++) != 0)
+        hash = ((hash << 5) + hash) + (unsigned long)c; /* hash * 33 + c */
     return hash;
 }
 
@@ -37,8 +37,9 @@ HashTable *create_hash_table(int size) {
 
 // 向哈希表中插入单词
 void hash_table_insert(HashTable *ht, const char *word) {
-    unsigned long hash = djb2_hash(word) % ht->size;
+    unsigned long hash = djb2_hash(word) % (unsigned long)ht->size;
     HashNode *node = ht->table[hash];
+
     while (node != NULL) {
         if (strcmp(node->word, word) == 0) {
             node->count++;
@@ -46,19 +47,23 @@ void hash_table_insert(HashTable *ht, const char *word) {
         }
         node = node->next;
     }
-    node = malloc(sizeof(HashNode));
-    if (node == NULL) {  // Check if malloc was successful
+
+    HashNode *new_node = malloc(sizeof(HashNode));
+    if (new_node == NULL) {
         return;
     }
-    
-    node->word = strdup(word);
-    if (node->word == NULL) {  // Check if strdup was successful
-        free(node);
+
+    size_t len = strlen(word);
+    new_node->word = malloc(len + 1);
+    if (new_node->word == NULL) {
+        free(new_node);
         return;
     }
-    node->count = 1;
-    node->next = ht->table[hash];
-    ht->table[hash] = node;
+    memcpy(new_node->word, word, len + 1);
+
+    new_node->count = 1;
+    new_node->next = ht->table[hash];
+    ht->table[hash] = new_node;
 }
 
 // 从哈希表中获取所有单词及其计数
@@ -67,7 +72,11 @@ void get_all_words(HashTable *ht, HashNode **nodes, int *count) {
     for (int i = 0; i < ht->size; i++) {
         HashNode *node = ht->table[i];
         while (node != NULL) {
-           nodes[*count++] = node;
+            if (nodes != NULL){
+                nodes[*count] = node;
+            }
+          
+           (*count)++;
            node = node->next;
         }
     }
@@ -109,22 +118,27 @@ void free_hash_table(HashTable *ht) {
 char *get_next_word(const char **text) {
     // TODO: 在这里添加你的代码
     const char *ptr = *text;
-    while (*ptr && !isalpha(*ptr)) {
+    while (*ptr && !isalpha((unsigned char)*ptr)) {
         ptr++;
     }
-    if (!*ptr) {
+    if (*ptr == '\0') {
+        *text = ptr;
         return NULL;
     }
     const char *start = ptr;
-    while (*ptr && isalpha(*ptr)) {
+    while (*ptr != '\0' && isalpha(*ptr)) {
         ptr++;
     }
-    int len = ptr - start;
-    char *word = malloc((len + 1)*sizeof(char));
+    size_t len = (size_t)(ptr - start);
+    char *word = malloc((len + 1));
     if (word == NULL) {  // Check if malloc was successful
+        *text = ptr;
         return NULL;
     }
-    strncpy(word, start, len);
+    for (int i = 0; i< len ; i++){
+        word[i]= (char)tolower((unsigned char)start[i]);
+    }
+    
     word[len] = '\0';
     *text = ptr;
     return word;

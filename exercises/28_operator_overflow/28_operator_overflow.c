@@ -7,8 +7,11 @@
 int check_add_overflow_asm(unsigned int a, unsigned int b) {
     unsigned char carry;
     __asm__ volatile(
-        // TODO: 在这里添加你的代码
-        // I AM NOT DONE
+        "add %1, %2\n"
+        "setc %0\n"
+        :"=r"(carry)
+        :"r"(a), "r"(b)
+        :"cc"
     );
     return carry;
 }
@@ -16,8 +19,11 @@ int check_add_overflow_asm(unsigned int a, unsigned int b) {
 int check_sub_overflow_asm(unsigned int a, unsigned int b) {
     unsigned char carry;
     __asm__ volatile(
-        // TODO: 在这里添加你的代码
-        // I AM NOT DONE
+        "sub %2, %1\n"
+        "setc %0\n"
+        :"=r"(carry)
+        :"r"(a), "r"(b)
+        :"cc"
     );
     return carry;
 }
@@ -26,9 +32,14 @@ int check_mul_overflow_asm(unsigned int a, unsigned int b) {
     unsigned int high_bits;
     unsigned char overflow;
     __asm__ volatile(
-        // TODO: 在这里添加你的代码
-        // I AM NOT DONE
-    );
+    "mull %[rhs]\n\t"       // 1. 32位乘法指令
+    "seto %[overflow]"      // 2. 把溢出标志OF → overflow变量
+    : "=d"(high_bits),      // 输出1：EDX → high_bits
+      "+a"(a),              // 输出2：EAX 是读写（+表示读+写）
+      [overflow] "=q"(overflow)  // 输出3：overflow 用8位寄存器
+    : [rhs] "r"(b)          // 输入：b 放入任意通用寄存器
+    : "cc"                  // 破坏：状态标志位被修改
+);
     return overflow || (high_bits != 0);
 }
 
@@ -36,7 +47,11 @@ int check_div_overflow_asm(unsigned int a, unsigned int b) {
     unsigned char is_div_zero;
     __asm__ volatile(
         // TODO: 在这里添加你的代码
-        // I AM NOT DONE
+        "test %2, %2\n"
+        "setz %0\n"
+        :"=r"(is_div_zero)
+        :"r"(a), "r"(b)
+        :"cc"
     );
     return is_div_zero;
 }
