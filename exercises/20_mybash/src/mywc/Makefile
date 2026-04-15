@@ -1,5 +1,3 @@
-# src/mywc/Makefile
-
 CC = gcc
 CFLAGS = -Wall -I../../include
 

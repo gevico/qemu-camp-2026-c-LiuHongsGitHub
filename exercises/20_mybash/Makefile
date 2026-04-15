@@ -1,11 +1,3 @@
-# =============================================
-# 主 Makefile
-# 功能：
-#   - mybash：生成二进制，放到 bin/
-#   - 其他模块（mysed, myfile, mywc, mytrans）：生成静态库 .a，放到 obj/xxx/，.o 放到 obj/xxx/（或 out/，但建议统一）
-#   - 所有子模块 Makefile 应支持 OBJDIR 和 BINDIR 参数
-# =============================================
-
 PWD := $(shell pwd)
 
 SUBDIRS := mysed myfile mywc mytrans
