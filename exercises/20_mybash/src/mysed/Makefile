@@ -1,5 +1,3 @@
-# src/mysed/Makefile
-
 CC = gcc
 CFLAGS = -Wall -I../../include
 

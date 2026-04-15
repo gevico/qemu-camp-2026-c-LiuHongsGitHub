@@ -1,5 +1,3 @@
-# src/myfile/Makefile
-
 CC = gcc
 CFLAGS = -Wall -I../../include -g -fPIE
 
