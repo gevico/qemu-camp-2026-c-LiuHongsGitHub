@@ -56,27 +56,35 @@ int hash_table_insert(HashTable *table, const char *key, const char *value) {
   unsigned long hash = hash_function(key) % HASH_TABLE_SIZE;
   HashNode *node = table->buckets[hash];
 
-  if (!node){
-    HashNode *new_node = malloc(sizeof(HashNode));
-    if (!new_node)
-      return 0;
-    new_node->key = strdup(key);
-    new_node->value = strdup(value);
-     new_node->next = table->buckets[hash];
-    table->buckets[hash] = new_node;
-    return 1;
-  } else {
-    while (node->next) {
-      if (strcmp(node->key, key) == 0) {
-        // 键已存在，更新值
-        free(node->value);
-        node->value = strdup(value);
-        return 1;
+  while (node) {
+    if (strcmp(node->key, key) == 0) {
+      char *new_value = strdup(value);
+      if (!new_value) {
+        return 0;
       }
-      node = node->next;
-    } 
+      free(node->value);
+      node->value = new_value;
+      return 1;
+    }
+    node = node->next;
   }
-  
+
+  HashNode *new_node = malloc(sizeof(HashNode));
+  if (!new_node) {
+    return 0;
+  }
+
+  new_node->key = strdup(key);
+  new_node->value = strdup(value);
+  if (!new_node->key || !new_node->value) {
+    free(new_node->key);
+    free(new_node->value);
+    free(new_node);
+    return 0;
+  }
+
+  new_node->next = table->buckets[hash];
+  table->buckets[hash] = new_node;
 
   return 1;
 }
@@ -89,7 +97,7 @@ const char *hash_table_lookup(HashTable *table, const char *key) {
   unsigned long hash = hash_function(key) % HASH_TABLE_SIZE;
   HashNode *node = table->buckets[hash];
 
-  while(node){
+  while (node) {
     if (strcmp(node->key, key) == 0) {
       return node->value;
     }

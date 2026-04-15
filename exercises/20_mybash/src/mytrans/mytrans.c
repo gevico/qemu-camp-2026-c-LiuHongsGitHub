@@ -111,7 +111,6 @@ int __cmd_mytrans(const char* filename) {
       "src/mytrans/dict.txt",
       "./src/mytrans/dict.txt",
       "dict.txt",
-      "/qemu-camp-2026-c-LiuHongsGitHub/exercises/20_mybash/src/mytrans/dict.txt",
       "/workspace/exercises/20_mybash/src/mytrans/dict.txt",
       NULL,
   };
@@ -119,12 +118,11 @@ int __cmd_mytrans(const char* filename) {
   int loaded = -1;
   for (int i = 0; dict_candidates[i] != NULL; i++) {
     loaded = load_dictionary(dict_candidates[i], table, &dict_count);
-    fprintf(stderr, "lopp load_dictionary %d %s %d\n", i, dict_candidates[i], loaded);
     if (loaded == 0) {
       break;
     }
   }
-  printf("词典加载完成，共计%ld词条。\n", loaded);
+
   if (loaded != 0) {
     fprintf(stderr, "加载词典失败，请确保 dict.txt 存在。\n");
     free_hash_table(table);
