@@ -33,12 +33,12 @@ typedef struct {
 
 static unsigned hash_int(int key) {
     // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    unsigned ukey = (unsigned) key;
+    return ukey * 2654435761u;
 }
 
 static HashEntry* hash_find(LRUCache* c, int key, HashEntry*** pprev_next) {
-    // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    hash_int(key)
 }
 
 static void list_add_to_head(LRUCache* c, LRUNode* node) {
